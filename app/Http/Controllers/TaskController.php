@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Category;
 use App\Models\Task;
 use App\Models\TaskAttachment;
+use App\Models\TaskHistory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
@@ -128,7 +129,10 @@ class TaskController extends Controller
         }
 
         // Load the task with taskAttachments and TaskComments
-        $task->load('taskAttachment');
+        $task->load(['taskAttachment','taskHistory','taskHistory.user']);
+
+        // Order the history by most recent
+        $task->taskHistory = $task->taskHistory->sortByDesc('created_at');
 
         return view('tasks.show', compact('task'));
     }
@@ -138,7 +142,10 @@ class TaskController extends Controller
      */
     public function edit(Task $task)
     {
-        //
+        $task->load('category');
+        $categories = Category::all();
+
+        return view('tasks.edit', compact('task', 'categories'));
     }
 
     /**
@@ -146,7 +153,37 @@ class TaskController extends Controller
      */
     public function update(Request $request, Task $task)
     {
-        //
+        $validated = $request->validate([
+            'title' => 'required|string|max:100|min:5',
+            'description' => 'nullable|string|max:500',
+            'due_date' => 'required|date',
+            'priority' => 'required|in:low,medium,high,urgent',
+            'category_id' => 'required|exists:categories,id',
+        ]);
+
+        $changes = [];
+
+        foreach ($validated as $field => $newValue) {
+            if ($task->$field != $newValue) {
+                $changes[] = [
+                    'task_id' => $task->id,
+                    'user_id' => auth()->id(),
+                    'action' => $field,
+                    'old_value' => $task->$field,
+                    'new_value' => $newValue,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ];
+            }
+        }
+
+        if (!empty($changes)) {
+            TaskHistory::insert($changes);
+        }
+
+        $task->update($validated);
+
+        return redirect()->route('tasks.show', $task)->with('success', 'Task updated successfully.');
     }
 
     /**
@@ -195,6 +232,15 @@ class TaskController extends Controller
 
         // Find the task
         $task = Task::findOrFail($id);
+
+        // Add change to history
+        TaskHistory::create([
+            'task_id' => $task->id,
+            'user_id' => auth()->id(),
+            'action' => 'status',
+            'old_value' => $task->status,
+            'new_value' => $request->status,
+        ]);
 
         // Status update
         $task->status = $request->status;
