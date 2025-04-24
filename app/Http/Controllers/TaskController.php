@@ -129,7 +129,7 @@ class TaskController extends Controller
         }
 
         // Load the task with taskAttachments and TaskComments
-        $task->load(['taskAttachment','taskHistory','taskHistory.user']);
+        $task->load(['taskAttachment','taskHistory','taskHistory.user','taskComment.user']);
 
         // Order the history by most recent
         $task->taskHistory = $task->taskHistory->sortByDesc('created_at');

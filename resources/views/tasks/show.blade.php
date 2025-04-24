@@ -60,7 +60,8 @@
                                         <x-text class="text-sm font-thin">
                                             Status: <span class="text-red-700">Incomplete</span>
                                         </x-text>
-                                        <x-primary-button class="!bg-green-500 !hover:bg-green-600 !text-white" name="status" value="completed">
+                                        <x-primary-button class="!bg-green-500 !hover:bg-green-600 !text-white"
+                                                          name="status" value="completed">
                                             Mark as Completed
                                         </x-primary-button>
                                     @endif
@@ -72,7 +73,8 @@
                         @if($task->taskAttachment->isNotEmpty())
                             @foreach($task->taskAttachment as $attachment)
                                 <div class="mb-2">
-                                    <a href="{{ asset('storage/attachments/' . $attachment->file_path) }}" target="_blank"
+                                    <a href="{{ asset('storage/attachments/' . $attachment->file_path) }}"
+                                       target="_blank"
                                        class="text-blue-600 hover:underline">
                                         {{ $attachment->file_name }} ({{ round($attachment->file_size / 1024, 2) }} KB)
                                     </a>
@@ -106,6 +108,34 @@
                     </form>
                 </div>
             </x-secondary-container>
+
+{{--            Comments --}}
+            <x-secondary-container class="mt-10 px-3 py-6 m-auto md:w-3/4">
+                <x-text class="text-lg font-semibold mb-2">Comments</x-text>
+                @foreach ($task->taskComment as $comment)
+                    <div class="p-3 border rounded-lg mb-2 w-3/4 bg-white">
+                        <p class="text-sm text-gray-700">
+                            <strong>{{ $comment->user->name }}</strong> commented:
+                        </p>
+                        <p class="text-gray-900">{{ $comment->comment }}</p>
+                        <p class="mt-2 text-xs text-gray-500">{{ $comment->created_at->diffForHumans() }}</p>
+                    </div>
+                @endforeach
+
+                {{-- Form to add a new comment --}}
+                <form action="{{ route('task-comments.store') }}" method="POST" class="mt-4">
+                    @csrf
+                    <input type="hidden" name="task_id" value="{{ $task->id }}">
+                    <x-input-label for="comment" :value="__('Add a comment')" />
+                    <textarea id="comment" name="comment" rows="4"
+                              class="block mt-2 mb-4 w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm"
+                              placeholder="Add a comment..." required>
+                    </textarea>
+                    <x-link-button>Post Comment</x-link-button>
+                </form>
+            </x-secondary-container>
+
+{{--            Task history --}}
             <x-secondary-container class="mt-10 px-3 py-6 m-auto md:w-3/4">
                 <div class="flex flex-col gap-2">
                     <x-text class="text-lg font-semibold !p-1 !mb-2">Task history</x-text>
@@ -117,7 +147,9 @@
                                     <p><strong>Field:</strong> {{ ucfirst($history->action) }}</p>
                                     <p><strong>Old Value:</strong> {{ $history->old_value }}</p>
                                     <p><strong>New Value:</strong> {{ $history->new_value }}</p>
-                                    <p><small class="text-gray-500">{{ $history->created_at->format('d/m/Y H:i') }}</small></p>
+                                    <p><small
+                                            class="text-gray-500">{{ $history->created_at->format('d/m/Y H:i') }}</small>
+                                    </p>
                                 </div>
                             @endforeach
                         </x-text>

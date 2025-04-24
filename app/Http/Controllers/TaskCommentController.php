@@ -71,6 +71,10 @@ class TaskCommentController extends Controller
      */
     public function destroy(TaskComment $taskComment)
     {
-        //
+        $this->authorize('delete', $taskComment); // Opcional: Solo el autor puede borrar su comentario
+
+        $taskComment->delete();
+
+        return back()->with('success', 'Comment deleted.');
     }
 }

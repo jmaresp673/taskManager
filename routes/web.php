@@ -3,6 +3,7 @@
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\TaskAttachmentController;
+use App\Http\Controllers\TaskCommentController;
 use App\Http\Controllers\TaskController;
 use App\View\Components\UserProfile;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
@@ -48,12 +49,14 @@ Route::middleware(['auth', 'verified', 'is_locked'])->group(function () {
 
         Route::post('/tasks', 'store')->name('tasks.store');
         Route::post('/tasks/{id}/restore', [TaskController::class, 'restore'])->name('tasks.restore');
-        Route::post('/tasks/{task}/comments', 'storeComment')->name('tasks.comments.store');
+        Route::post('/task-comments', [TaskCommentController::class, 'store'])->name('task-comments.store');
 
         Route::patch('/tasks/{task}', 'update')->name('tasks.update');
         Route::patch('/tasks/{task}/status', 'updateStatus')->name('tasks.update.status');
 
+
         Route::delete('/tasks/{task}', 'destroy')->name('tasks.destroy');
+        Route::delete('/task-comments/{taskComment}', [TaskCommentController::class, 'destroy'])->name('task-comments.destroy');
     });
 
     // Attachments
